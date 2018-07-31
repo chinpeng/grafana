@@ -58,27 +58,14 @@ type Playlists []*Playlist
 type PlaylistDashboards []*PlaylistDashboard
 
 //
-// DTOS
-//
-
-type PlaylistDashboardDto struct {
-	Id    int64  `json:"id"`
-	Slug  string `json:"slug"`
-	Title string `json:"title"`
-	Uri   string `json:"uri"`
-}
-
-//
 // COMMANDS
 //
 
 type UpdatePlaylistCommand struct {
 	OrgId    int64             `json:"-"`
-	Id       int64             `json:"id" binding:"Required"`
+	Id       int64             `json:"id"`
 	Name     string            `json:"name" binding:"Required"`
-	Type     string            `json:"type"`
 	Interval string            `json:"interval"`
-	Data     []int64           `json:"data"`
 	Items    []PlaylistItemDTO `json:"items"`
 
 	Result *PlaylistDTO
@@ -86,9 +73,7 @@ type UpdatePlaylistCommand struct {
 
 type CreatePlaylistCommand struct {
 	Name     string            `json:"name" binding:"Required"`
-	Type     string            `json:"type"`
 	Interval string            `json:"interval"`
-	Data     []int64           `json:"data"`
 	Items    []PlaylistItemDTO `json:"items"`
 
 	OrgId  int64 `json:"-"`
@@ -120,9 +105,4 @@ type GetPlaylistByIdQuery struct {
 type GetPlaylistItemsByIdQuery struct {
 	PlaylistId int64
 	Result     *[]PlaylistItem
-}
-
-type GetPlaylistDashboardsQuery struct {
-	DashboardIds []int64
-	Result       *PlaylistDashboards
 }

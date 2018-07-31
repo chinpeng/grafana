@@ -1,45 +1,41 @@
-///<reference path="../../../headers/common.d.ts" />
-
 import angular from 'angular';
+import _ from 'lodash';
 
 export class SubmenuCtrl {
   annotations: any;
   variables: any;
   dashboard: any;
 
-  constructor(private $rootScope, private templateValuesSrv, private dynamicDashboardSrv) {
+  /** @ngInject */
+  constructor(private $rootScope, private variableSrv, private $location) {
     this.annotations = this.dashboard.templating.list;
-    this.variables = this.dashboard.templating.list;
+    this.variables = this.variableSrv.variables;
   }
 
-  disableAnnotation(annotation) {
-    annotation.enable = !annotation.enable;
+  annotationStateChanged() {
     this.$rootScope.$broadcast('refresh');
   }
 
-  getValuesForTag(variable, tagKey) {
-    return this.templateValuesSrv.getValuesForTag(variable, tagKey);
+  variableUpdated(variable) {
+    this.variableSrv.variableUpdated(variable, true);
   }
 
-  variableUpdated(variable) {
-    this.templateValuesSrv.variableUpdated(variable).then(() => {
-      this.dynamicDashboardSrv.update(this.dashboard);
-      this.$rootScope.$emit('template-variable-value-updated');
-      this.$rootScope.$broadcast('refresh');
-    });
+  openEditView(editview) {
+    var search = _.extend(this.$location.search(), { editview: editview });
+    this.$location.search(search);
   }
 }
 
 export function submenuDirective() {
   return {
     restrict: 'E',
-    templateUrl: 'app/features/dashboard/submenu/submenu.html',
+    templateUrl: 'public/app/features/dashboard/submenu/submenu.html',
     controller: SubmenuCtrl,
     bindToController: true,
     controllerAs: 'ctrl',
     scope: {
-      dashboard: "=",
-    }
+      dashboard: '=',
+    },
   };
 }
 

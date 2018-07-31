@@ -1,12 +1,9 @@
-///<reference path="../../../headers/common.d.ts" />
-
 import angular from 'angular';
 import _ from 'lodash';
 
 class MixedDatasource {
-
-  constructor(private $q, private datasourceSrv) {
-  }
+  /** @ngInject */
+  constructor(private $q, private datasourceSrv) {}
 
   query(options) {
     var sets = _.groupBy(options.targets, 'datasource');
@@ -24,9 +21,9 @@ class MixedDatasource {
     });
 
     return this.$q.all(promises).then(function(results) {
-      return { data: _.flatten(_.pluck(results, 'data')) };
+      return { data: _.flatten(_.map(results, 'data')) };
     });
   }
 }
 
-export {MixedDatasource, MixedDatasource as Datasource}
+export { MixedDatasource, MixedDatasource as Datasource };

@@ -1,17 +1,23 @@
-<div>
-  <div class="row-fluid">
-    <div class="span4">
-      <label class="small">Mode</label> <select class="input-medium" ng-model="panel.mode" ng-options="f for f in ['html','markdown','text']"></select>
-    </div>
-    <div class="span2" ng-show="panel.mode == 'text'">
-      <label class="small">Font Size</label> <select class="input-mini" ng-model="panel.style['font-size']" ng-options="f for f in ['6pt','7pt','8pt','10pt','12pt','14pt','16pt','18pt','20pt','24pt','28pt','32pt','36pt','42pt','48pt','52pt','60pt','72pt']"></select>
-    </div>
-  </div>
+<div class="gf-form-group">
+	<div class="gf-form-inline">
+		<div class="gf-form">
+			<span class="gf-form-label">Mode</span>
+			<span class="gf-form-select-wrapper">
+				<select class="gf-form-input" ng-model="ctrl.panel.mode" ng-options="f for f in ['html','markdown']"></select>
+			</span>
+		</div>
+	</div>
+</div>
 
-  <label class=small>Content
-    <span ng-show="panel.mode == 'markdown'">(This area uses <a target="_blank" href="http://en.wikipedia.org/wiki/Markdown">Markdown</a>. HTML is not supported)</span>
-  </label>
+<h3 class="page-heading">Content</h3>
 
-  <textarea ng-model="panel.content" rows="20" style="width:95%" ng-change="render()" ng-model-onblur>
-  </textarea>
+<span ng-show="ctrl.panel.mode == 'markdown'">
+	(This area uses <a target="_blank" href="http://en.wikipedia.org/wiki/Markdown">Markdown</a>. HTML is not supported)
+</span>
+
+<div class="gf-form-inline">
+	<div class="gf-form gf-form--grow">
+		<code-editor content="ctrl.panel.content" on-change="ctrl.render()" data-mode="markdown" data-max-lines=20 code-editor-focus="true">
+		</code-editor>
+	</div>
 </div>

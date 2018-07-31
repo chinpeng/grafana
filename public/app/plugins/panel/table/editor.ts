@@ -1,114 +1,86 @@
-///<reference path="../../../headers/common.d.ts" />
-
-
 import _ from 'lodash';
-import $ from 'jquery';
-import moment from 'moment';
-import angular from 'angular';
-
-import {transformers} from './transformers';
-import kbn from 'app/core/utils/kbn';
+import { transformers } from './transformers';
 
 export class TablePanelEditorCtrl {
+  panel: any;
+  panelCtrl: any;
+  transformers: any;
+  fontSizes: any;
+  addColumnSegment: any;
+  getColumnNames: any;
+  canSetColumns: boolean;
+  columnsHelpMessage: string;
 
   /** @ngInject */
-  constructor($scope, $q, uiSegmentSrv) {
-    $scope.transformers = transformers;
-    $scope.unitFormats = kbn.getUnitFormats();
-    $scope.colorModes = [
-      {text: 'Disabled', value: null},
-      {text: 'Cell', value: 'cell'},
-      {text: 'Value', value: 'value'},
-      {text: 'Row', value: 'row'},
-    ];
-    $scope.columnTypes = [
-      {text: 'Number', value: 'number'},
-      {text: 'String', value: 'string'},
-      {text: 'Date', value: 'date'},
-    ];
-    $scope.fontSizes = ['80%', '90%', '100%', '110%', '120%', '130%', '150%', '160%', '180%', '200%', '220%', '250%'];
-    $scope.dateFormats = [
-      {text: 'YYYY-MM-DD HH:mm:ss', value: 'YYYY-MM-DD HH:mm:ss'},
-      {text: 'MM/DD/YY h:mm:ss a', value: 'MM/DD/YY h:mm:ss a'},
-      {text: 'MMMM D, YYYY LT',  value: 'MMMM D, YYYY LT'},
-    ];
+  constructor($scope, private $q, private uiSegmentSrv) {
+    $scope.editor = this;
+    this.panelCtrl = $scope.ctrl;
+    this.panel = this.panelCtrl.panel;
+    this.transformers = transformers;
+    this.fontSizes = ['80%', '90%', '100%', '110%', '120%', '130%', '150%', '160%', '180%', '200%', '220%', '250%'];
+    this.addColumnSegment = uiSegmentSrv.newPlusButton();
+    this.updateTransformHints();
+  }
 
-    $scope.addColumnSegment = uiSegmentSrv.newPlusButton();
+  updateTransformHints() {
+    this.canSetColumns = false;
+    this.columnsHelpMessage = '';
 
-    $scope.getColumnOptions = function() {
-      if (!$scope.dataRaw) {
-        return $q.when([]);
+    switch (this.panel.transform) {
+      case 'timeseries_aggregations': {
+        this.canSetColumns = true;
+        break;
       }
-      var columns = transformers[$scope.panel.transform].getColumns($scope.dataRaw);
-      var segments = _.map(columns, (c: any) => uiSegmentSrv.newSegment({value: c.text}));
-      return $q.when(segments);
-    };
-
-    $scope.addColumn = function() {
-      var columns = transformers[$scope.panel.transform].getColumns($scope.dataRaw);
-      var column = _.findWhere(columns, {text: $scope.addColumnSegment.value});
-
-      if (column) {
-        $scope.panel.columns.push(column);
-        $scope.render();
+      case 'json': {
+        this.canSetColumns = true;
+        break;
       }
-
-      var plusButton = uiSegmentSrv.newPlusButton();
-      $scope.addColumnSegment.html = plusButton.html;
-      $scope.addColumnSegment.value = plusButton.value;
-    };
-
-    $scope.transformChanged = function() {
-      $scope.panel.columns = [];
-      $scope.render();
-    };
-
-    $scope.removeColumn = function(column) {
-      $scope.panel.columns = _.without($scope.panel.columns, column);
-      $scope.render();
-    };
-
-    $scope.setUnitFormat = function(column, subItem) {
-      column.unit = subItem.value;
-      $scope.render();
-    };
-
-    $scope.addColumnStyle = function() {
-      var columnStyleDefaults = {
-        unit: 'short',
-        type: 'number',
-        decimals: 2,
-        colors: ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
-        colorMode: null,
-        pattern: '/.*/',
-        dateFormat: 'YYYY-MM-DD HH:mm:ss',
-        thresholds: [],
-      };
-
-      $scope.panel.styles.push(angular.copy(columnStyleDefaults));
-    };
-
-    $scope.removeColumnStyle = function(style) {
-      $scope.panel.styles = _.without($scope.panel.styles, style);
-    };
-
-    $scope.getColumnNames = function() {
-      if (!$scope.table) {
-        return [];
+      case 'table': {
+        this.columnsHelpMessage = 'Columns and their order are determined by the data query';
       }
-      return _.map($scope.table.columns, function(col: any) {
-        return col.text;
-      });
-    };
+    }
+  }
 
-    $scope.invertColorOrder = function(index) {
-      var ref = $scope.panel.styles[index].colors;
-      var copy = ref[0];
-      ref[0] = ref[2];
-      ref[2] = copy;
-      $scope.render();
-    };
+  getColumnOptions() {
+    if (!this.panelCtrl.dataRaw) {
+      return this.$q.when([]);
+    }
+    var columns = this.transformers[this.panel.transform].getColumns(this.panelCtrl.dataRaw);
+    var segments = _.map(columns, (c: any) => this.uiSegmentSrv.newSegment({ value: c.text }));
+    return this.$q.when(segments);
+  }
 
+  addColumn() {
+    var columns = transformers[this.panel.transform].getColumns(this.panelCtrl.dataRaw);
+    var column = _.find(columns, { text: this.addColumnSegment.value });
+
+    if (column) {
+      this.panel.columns.push(column);
+      this.render();
+    }
+
+    var plusButton = this.uiSegmentSrv.newPlusButton();
+    this.addColumnSegment.html = plusButton.html;
+    this.addColumnSegment.value = plusButton.value;
+  }
+
+  transformChanged() {
+    this.panel.columns = [];
+    if (this.panel.transform === 'timeseries_aggregations') {
+      this.panel.columns.push({ text: 'Avg', value: 'avg' });
+    }
+
+    this.updateTransformHints();
+    this.render();
+  }
+
+  render() {
+    this.panelCtrl.render();
+  }
+
+  removeColumn(column) {
+    this.panel.columns = _.without(this.panel.columns, column);
+    this.panelCtrl.render();
   }
 }
 
@@ -118,7 +90,7 @@ export function tablePanelEditor($q, uiSegmentSrv) {
   return {
     restrict: 'E',
     scope: true,
-    templateUrl: 'app/plugins/panel/table/editor.html',
+    templateUrl: 'public/app/plugins/panel/table/editor.html',
     controller: TablePanelEditorCtrl,
   };
 }
